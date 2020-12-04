@@ -18,15 +18,15 @@ import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.graphics.g3d.environment.PointLight;
-import com.badlogic.gdx.graphics.g3d.utils.CameraInputController;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 public class SpaceRaceGame implements ApplicationListener {
 	
 	PerspectiveCamera cam;
-	CameraInputController camController;
+	ThirdPerson3DCameraBehavior thirdPerson;
+
 	SpriteBatch spriteBatch;
 	ModelBatch modelBatch;
 	DecalBatch decalBatch;
@@ -39,6 +39,8 @@ public class SpaceRaceGame implements ApplicationListener {
 	Color ambientColor = new Color(ambientLightIntensity, ambientLightIntensity, ambientLightIntensity, 1f);
 
 	ModelInstance shipInstance;
+	Matrix4 shipPreTransform = new Matrix4().rotate(Vector3.Y, 180);
+	Matrix4 shipTransform = new Matrix4().translate(0, 0, 4);
 	ModelInstance shipInstance2;
 	ModelInstance skyboxInstance;
 
@@ -66,11 +68,12 @@ public class SpaceRaceGame implements ApplicationListener {
 		cam.near = 1f;
 		cam.far = 300f;
 		cam.update();
+		thirdPerson = new ThirdPerson3DCameraBehavior();
+		thirdPerson.camera = cam;
 
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
 
-		camController = new CameraInputController(cam);
-		Gdx.input.setInputProcessor(camController);
+		//Gdx.input.setInputProcessor(camController);
 
 		assets = new AssetManager();
 		assets.load("ship.g3db", Model.class);
@@ -87,7 +90,7 @@ public class SpaceRaceGame implements ApplicationListener {
 		shipInstance = new ModelInstance(ship);
         instances.add(shipInstance);
 		shipInstance2 = new ModelInstance(ship);
-		shipInstance2.transform.translate(0, 2, 0);
+		shipInstance2.transform.translate(0, 2, -4);
 		instances.add(shipInstance2);
 
 		sunSprite = new Sprite(sunTexture);
@@ -111,15 +114,18 @@ public class SpaceRaceGame implements ApplicationListener {
 				return; // wait
 			}
 		}
-		camController.update();
+		shipTransform.translate(0, 0, -0.005f).rotate(Vector3.Z, 0.1f);
+		shipInstance.transform.set(shipPreTransform).mulLeft(shipTransform);
+		shipInstance2.transform.rotate(Vector3.X, 0.2f);
+
+		thirdPerson.modelMatrix = shipTransform;
+		thirdPerson.update();
 
 		skyboxInstance.transform.setToTranslationAndScaling(cam.position, skyboxScaleV);
 
 		Vector3 sunPosition = new Vector3(sunDisplacement).add(cam.position);
 		sun.setPosition(sunPosition);
 		sun.lookAt(cam.position, sunUp);
-
-		shipInstance2.transform.rotate(1f, 0f, 0f, 0.2f);
 
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
