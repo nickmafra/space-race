@@ -7,14 +7,12 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
-import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
@@ -23,7 +21,7 @@ import com.badlogic.gdx.utils.Array;
 public class SpaceRaceGame implements ApplicationListener {
 	
 	PerspectiveCamera cam;
-	ThirdPerson3DCameraBehavior thirdPerson;
+	ThirdPerson3DCameraBehavior thirdPerson = new ThirdPerson3DCameraBehavior();
 	ShipInputProcessor inputProcessor;
 
 	ModelBatch modelBatch;
@@ -38,24 +36,15 @@ public class SpaceRaceGame implements ApplicationListener {
 
 	Ship ship = new Ship();
 	ModelInstance shipInstance2;
-	ModelInstance skyboxInstance;
 
-	float skyboxScale = 2;
-	Vector3 skyboxScaleV = new Vector3(skyboxScale, skyboxScale, skyboxScale);
-
-	Sprite sunSprite;
-	Decal sun;
-	float sunSize = 100;
-	float sunScale;
-	Vector3 sunDisplacement = new Vector3(0, 0, -100);
-	Vector3 sunUp = new Vector3(0, 1, 0);
+	BackGround bg = new BackGround();
 
 	@Override
 	public void create () {
 		modelBatch = new ModelBatch();
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientColor));
-		environment.add(new DirectionalLight().set(Color.WHITE, new Vector3(sunDisplacement).scl(-1f)));
+		environment.add(new DirectionalLight().set(Color.WHITE, new Vector3(bg.sunDisplacement).scl(-1f)));
 
 		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		cam.position.set(1f, 1f, 1f);
@@ -63,8 +52,8 @@ public class SpaceRaceGame implements ApplicationListener {
 		cam.near = 1f;
 		cam.far = 300f;
 		cam.update();
-		thirdPerson = new ThirdPerson3DCameraBehavior();
 		thirdPerson.camera = cam;
+		bg.camera = cam;
 
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
 
@@ -93,14 +82,10 @@ public class SpaceRaceGame implements ApplicationListener {
 		shipInstance2.transform.translate(0, 2, -4);
 		instances.add(shipInstance2);
 
-		sunSprite = new Sprite(sunTexture);
-		float sunTextureSize = Math.max(sunSprite.getWidth(), sunSprite.getHeight());
-		sunScale = sunSize / sunTextureSize;
-		sun = Decal.newDecal(sunSprite, true);
-		sun.setScale(sunScale);
+		bg.makeSun(sunTexture);
 
-		skyboxInstance = new ModelInstance(skybox);
-		instances.add(skyboxInstance);
+		bg.skyboxInstance = new ModelInstance(skybox);
+		instances.add(bg.skyboxInstance);
 
 		loading = false;
 	}
@@ -125,11 +110,7 @@ public class SpaceRaceGame implements ApplicationListener {
 		thirdPerson.modelMatrix = ship.physicalBody.transform;
 		thirdPerson.update();
 
-		skyboxInstance.transform.setToTranslationAndScaling(cam.position, skyboxScaleV);
-
-		Vector3 sunPosition = new Vector3(sunDisplacement).add(cam.position);
-		sun.setPosition(sunPosition);
-		sun.lookAt(cam.position, sunUp);
+		bg.update();
 
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -139,7 +120,7 @@ public class SpaceRaceGame implements ApplicationListener {
 		modelBatch.render(instances, environment);
 		modelBatch.end();
 
-		decalBatch.add(sun);
+		decalBatch.add(bg.sunDecal);
 		decalBatch.flush();
 	}
 
