@@ -11,9 +11,10 @@ public class ShipInputProcessor extends InputAdapter {
     public Ship ship;
 
     public float linearAcceleration = 1f;
-    public float angularAcceleration = 1f;
-    public float deadZone = 10;
-    public float rotationFactor = 0.01f;
+    public float angularAcceleration = 10f;
+
+    public float maxDiffSize = 50;
+    public float deadZone = 0.1f;
 
     private boolean boosting;
     private Vector2 initialPosition = new Vector2();
@@ -52,16 +53,29 @@ public class ShipInputProcessor extends InputAdapter {
             ship.physicalBody.linearVelocity.add(direction.scl(velocityDelta));
 
             Vector2 diff = currentPosition.cpy().sub(initialPosition);
-            if (diff.len() > deadZone) {
-                float rotMultiplier = calcRotMultiplier(diff);
-                Vector2 rotAxis2d = diff.cpy().rotate90(-1);
-                Vector3 rotAxis3d = new Vector3(-rotAxis2d.x, rotAxis2d.y, 0);
-                ship.physicalBody.angularVelocity.rotate(rotAxis3d, angularAcceleration * rotMultiplier);
+            float rotationPercent = calcRotationPercent(diff);
+            if (rotationPercent > 0) {
+                float angularVelocityDelta = rotationPercent * angularAcceleration * deltaTime;
+                Vector2 rotAxis2d = new Vector2(diff.x, -diff.y).rotate90(1);
+                Vector3 rotAxis3d = new Vector3(rotAxis2d, 0).rot(ship.physicalBody.transform).nor();
+                ship.physicalBody.angularVelocity.rotate(rotAxis3d, angularVelocityDelta);
             }
         }
     }
 
-    private float calcRotMultiplier(Vector2 diff) {
-        return diff.len() * rotationFactor;
+    /**
+     * Translates diff and maxDiffSize in rotation percent. Uses deadZone.
+     * <br>
+     * note: 0 <= percent <= 1
+     */
+    private float calcRotationPercent(Vector2 diff) {
+        float percent = diff.len() / maxDiffSize;
+        if (percent <= deadZone) {
+            return 0;
+        }
+        if (percent >= 1) {
+            return 1;
+        }
+        return percent;
     }
 }
