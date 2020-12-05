@@ -6,7 +6,10 @@ import com.badlogic.gdx.math.Vector3;
 
 public class PhysicalBody {
 
+    /** calculated by position and rotation */
     public Matrix4 transform = new Matrix4();
+    public Vector3 position = new Vector3();
+    public Matrix4 rotation = new Matrix4();
     public Vector3 linearVelocity = Vector3.Zero.cpy();
     public Matrix4 angularVelocity = new Matrix4();
 
@@ -14,12 +17,15 @@ public class PhysicalBody {
     private Matrix4 tempM1 = new Matrix4();
 
     public void update(float deltaTime) {
-        // translation
+        // position
         tempV1.set(linearVelocity).scl(deltaTime);
-        transform.translate(tempV1);
+        position.add(tempV1);
         // rotation
-        Quaternion rotation = angularVelocity.getRotation(new Quaternion(), true).exp(deltaTime);
-        tempM1.idt().rotate(rotation);
-        transform.mulLeft(tempM1);
+        Quaternion qRotation = angularVelocity.getRotation(new Quaternion(), true).exp(deltaTime);
+        tempM1.idt().rotate(qRotation);
+        rotation.mulLeft(tempM1);
+        // update transform matrix
+        transform.setToTranslation(position);
+        transform.mul(rotation);
     }
 }

@@ -1,0 +1,11 @@
+# Exported from Wings 3D 2.2.6.1
+newmtl prop_auv
+Ns 0.0
+d 1.0
+illum 2
+Kd 0.3496932515337423 0.3496932515337423 0.3496932515337423
+Ka 0.0 0.0 0.0
+Ks 0.1 0.1 0.1
+Ke 0.0 0.0 0.0
+map_Kd darksand.png
+

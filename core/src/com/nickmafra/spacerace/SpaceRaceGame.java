@@ -14,6 +14,9 @@ import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SpaceRaceGame implements ApplicationListener {
 
 	ModelBatch modelBatch;
@@ -24,11 +27,12 @@ public class SpaceRaceGame implements ApplicationListener {
 	boolean loading;
 
 	BackGround bg;
-	Ship ship;
 	ShipCamera cam;
 	ShipInputProcessor inputProcessor;
 
+	Ship shipPlayer;
 	Ship ship2;
+	List<Ship> ships;
 
 	@Override
 	public void create () {
@@ -41,41 +45,47 @@ public class SpaceRaceGame implements ApplicationListener {
 		bg = new BackGround();
 		bg.configEnvironment(environment);
 
-		ship = new Ship();
-		cam.ship = ship;
+		shipPlayer = new Ship();
+		cam.ship = shipPlayer;
 		cam.update();
 		bg.camera = cam;
 
 		inputProcessor = new ShipInputProcessor();
-		inputProcessor.ship = ship;
+		inputProcessor.ship = shipPlayer;
 		Gdx.input.setInputProcessor(inputProcessor);
 
 		assets = new AssetManager();
-		assets.load("ship.g3db", Model.class);
+		for (String modelName : Ship.MODEL_NAMES) {
+			assets.load(modelName, Model.class);
+		}
 		assets.load("mc-stars.obj", Model.class);
 		assets.load("sun.png", Texture.class);
 		loading = true;
 	}
 
 	private void doneLoading() {
-		Model shipModel = assets.get("ship.g3db", Model.class);
 		Model skyboxModel = assets.get("mc-stars.obj", Model.class);
 		Texture sunTexture = assets.get("sun.png", Texture.class);
 
-		ship.modelInstance = new ModelInstance(shipModel);
-        instances.add(ship.modelInstance);
+		shipPlayer.load(assets);
 
 		ship2 = new Ship();
-		ship2.modelInstance = new ModelInstance(shipModel);
-		instances.add(ship2.modelInstance);
+		ship2.load(assets);
 
 		bg.makeSun(sunTexture);
 		bg.skyboxInstance = new ModelInstance(skyboxModel);
 		instances.add(bg.skyboxInstance);
 
-		ship.physicalBody.transform.translate(0, 0, 4);
-		ship2.modelInstance.transform.translate(0, 2, -4);
-		ship2.physicalBody.angularVelocity.rotate(Vector3.X, 20f);
+		ships = new ArrayList<>();
+		ships.add(shipPlayer);
+		ships.add(ship2);
+
+		shipPlayer.physicalBody.position.set(0, 0, 0);
+		shipPlayer.physicalBody.rotation.rotate(Vector3.Y, 180);
+
+		ship2.physicalBody.position.add(-5, 0, 5);
+		ship2.physicalBody.linearVelocity.set(0, 0, -0.3f);
+		ship2.physicalBody.angularVelocity.rotate(Vector3.X, -20f);
 
 		loading = false;
 	}
@@ -92,10 +102,10 @@ public class SpaceRaceGame implements ApplicationListener {
 
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		inputProcessor.update(deltaTime);
-		ship.updatePhysics(deltaTime);
+		shipPlayer.updatePhysics(deltaTime);
 		ship2.updatePhysics(deltaTime);
 
-		ship.updateModelInstance();
+		shipPlayer.updateModelInstance();
 		ship2.updateModelInstance();
 
 		cam.update();
@@ -108,6 +118,9 @@ public class SpaceRaceGame implements ApplicationListener {
 
 		modelBatch.begin(cam);
 		modelBatch.render(instances, environment);
+		for (Ship ship : ships) {
+			modelBatch.render(ship.instances, environment);
+		}
 		modelBatch.end();
 
 		decalBatch.add(bg.sunDecal);
