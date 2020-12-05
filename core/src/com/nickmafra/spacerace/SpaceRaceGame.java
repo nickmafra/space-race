@@ -33,7 +33,7 @@ public class SpaceRaceGame implements ApplicationListener {
 	Environment environment;
 	boolean loading;
 
-	float ambientLightIntensity = 0.06f;
+	float ambientLightIntensity = 0.1f;
 	Color ambientColor = new Color(ambientLightIntensity, ambientLightIntensity, ambientLightIntensity, 1f);
 
 	Ship ship = new Ship();
