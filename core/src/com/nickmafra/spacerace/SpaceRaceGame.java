@@ -3,26 +3,18 @@ package com.nickmafra.spacerace;
 import com.badlogic.gdx.ApplicationListener;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
-import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
-import com.badlogic.gdx.graphics.g3d.attributes.ColorAttribute;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
-import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
 public class SpaceRaceGame implements ApplicationListener {
-	
-	PerspectiveCamera cam;
-	ThirdPerson3DCameraBehavior thirdPerson = new ThirdPerson3DCameraBehavior();
-	ShipInputProcessor inputProcessor;
 
 	ModelBatch modelBatch;
 	DecalBatch decalBatch;
@@ -31,31 +23,28 @@ public class SpaceRaceGame implements ApplicationListener {
 	Environment environment;
 	boolean loading;
 
-	float ambientLightIntensity = 0.1f;
-	Color ambientColor = new Color(ambientLightIntensity, ambientLightIntensity, ambientLightIntensity, 1f);
+	BackGround bg;
+	Ship ship;
+	ShipCamera cam;
+	ShipInputProcessor inputProcessor;
 
-	Ship ship = new Ship();
-	ModelInstance shipInstance2;
-
-	BackGround bg = new BackGround();
+	Ship ship2;
 
 	@Override
 	public void create () {
+		cam = new ShipCamera();
+
 		modelBatch = new ModelBatch();
 		environment = new Environment();
-		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientColor));
-		environment.add(new DirectionalLight().set(Color.WHITE, new Vector3(bg.sunDisplacement).scl(-1f)));
-
-		cam = new PerspectiveCamera(67, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
-		cam.position.set(1f, 1f, 1f);
-		cam.lookAt(0,0,0);
-		cam.near = 1f;
-		cam.far = 300f;
-		cam.update();
-		thirdPerson.camera = cam;
-		bg.camera = cam;
-
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
+
+		bg = new BackGround();
+		bg.configEnvironment(environment);
+
+		ship = new Ship();
+		cam.ship = ship;
+		cam.update();
+		bg.camera = cam;
 
 		inputProcessor = new ShipInputProcessor();
 		inputProcessor.ship = ship;
@@ -70,22 +59,23 @@ public class SpaceRaceGame implements ApplicationListener {
 
 	private void doneLoading() {
 		Model shipModel = assets.get("ship.g3db", Model.class);
-		Model skybox = assets.get("mc-stars.obj", Model.class);
+		Model skyboxModel = assets.get("mc-stars.obj", Model.class);
 		Texture sunTexture = assets.get("sun.png", Texture.class);
 
 		ship.modelInstance = new ModelInstance(shipModel);
         instances.add(ship.modelInstance);
-		ship.preModelTransform.rotate(Vector3.Y, 180);
-		ship.physicalBody.transform.translate(0, 0, 4);
 
-		shipInstance2 = new ModelInstance(shipModel);
-		shipInstance2.transform.translate(0, 2, -4);
-		instances.add(shipInstance2);
+		ship2 = new Ship();
+		ship2.modelInstance = new ModelInstance(shipModel);
+		instances.add(ship2.modelInstance);
 
 		bg.makeSun(sunTexture);
-
-		bg.skyboxInstance = new ModelInstance(skybox);
+		bg.skyboxInstance = new ModelInstance(skyboxModel);
 		instances.add(bg.skyboxInstance);
+
+		ship.physicalBody.transform.translate(0, 0, 4);
+		ship2.modelInstance.transform.translate(0, 2, -4);
+		ship2.physicalBody.angularVelocity.rotate(Vector3.X, 20f);
 
 		loading = false;
 	}
@@ -103,12 +93,12 @@ public class SpaceRaceGame implements ApplicationListener {
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		inputProcessor.update(deltaTime);
 		ship.updatePhysics(deltaTime);
+		ship2.updatePhysics(deltaTime);
 
 		ship.updateModelInstance();
-		shipInstance2.transform.rotate(Vector3.X, 0.2f);
+		ship2.updateModelInstance();
 
-		thirdPerson.modelMatrix = ship.physicalBody.transform;
-		thirdPerson.update();
+		cam.update();
 
 		bg.update();
 
