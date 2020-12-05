@@ -8,7 +8,6 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.PerspectiveCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.Sprite;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g3d.Environment;
 import com.badlogic.gdx.graphics.g3d.Model;
 import com.badlogic.gdx.graphics.g3d.ModelBatch;
@@ -18,7 +17,6 @@ import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.Decal;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
 import com.badlogic.gdx.graphics.g3d.environment.DirectionalLight;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -26,8 +24,8 @@ public class SpaceRaceGame implements ApplicationListener {
 	
 	PerspectiveCamera cam;
 	ThirdPerson3DCameraBehavior thirdPerson;
+	ShipInputProcessor inputProcessor;
 
-	SpriteBatch spriteBatch;
 	ModelBatch modelBatch;
 	DecalBatch decalBatch;
 	AssetManager assets;
@@ -38,9 +36,7 @@ public class SpaceRaceGame implements ApplicationListener {
 	float ambientLightIntensity = 0.06f;
 	Color ambientColor = new Color(ambientLightIntensity, ambientLightIntensity, ambientLightIntensity, 1f);
 
-	ModelInstance shipInstance;
-	Matrix4 shipPreTransform = new Matrix4().rotate(Vector3.Y, 180);
-	Matrix4 shipTransform = new Matrix4().translate(0, 0, 4);
+	Ship ship = new Ship();
 	ModelInstance shipInstance2;
 	ModelInstance skyboxInstance;
 
@@ -56,7 +52,6 @@ public class SpaceRaceGame implements ApplicationListener {
 
 	@Override
 	public void create () {
-		spriteBatch = new SpriteBatch();
 		modelBatch = new ModelBatch();
 		environment = new Environment();
 		environment.set(new ColorAttribute(ColorAttribute.AmbientLight, ambientColor));
@@ -73,7 +68,9 @@ public class SpaceRaceGame implements ApplicationListener {
 
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
 
-		//Gdx.input.setInputProcessor(camController);
+		inputProcessor = new ShipInputProcessor();
+		inputProcessor.ship = ship;
+		Gdx.input.setInputProcessor(inputProcessor);
 
 		assets = new AssetManager();
 		assets.load("ship.g3db", Model.class);
@@ -83,13 +80,16 @@ public class SpaceRaceGame implements ApplicationListener {
 	}
 
 	private void doneLoading() {
-		Model ship = assets.get("ship.g3db", Model.class);
+		Model shipModel = assets.get("ship.g3db", Model.class);
 		Model skybox = assets.get("mc-stars.obj", Model.class);
 		Texture sunTexture = assets.get("sun.png", Texture.class);
 
-		shipInstance = new ModelInstance(ship);
-        instances.add(shipInstance);
-		shipInstance2 = new ModelInstance(ship);
+		ship.modelInstance = new ModelInstance(shipModel);
+        instances.add(ship.modelInstance);
+		ship.preModelTransform.rotate(Vector3.Y, 180);
+		ship.physicalBody.transform.translate(0, 0, 4);
+
+		shipInstance2 = new ModelInstance(shipModel);
 		shipInstance2.transform.translate(0, 2, -4);
 		instances.add(shipInstance2);
 
@@ -114,11 +114,15 @@ public class SpaceRaceGame implements ApplicationListener {
 				return; // wait
 			}
 		}
-		shipTransform.translate(0, 0, -0.005f).rotate(Vector3.Z, 0.1f);
-		shipInstance.transform.set(shipPreTransform).mulLeft(shipTransform);
+
+		float deltaTime = Gdx.graphics.getDeltaTime();
+		inputProcessor.update(deltaTime);
+		ship.updatePhysics(deltaTime);
+
+		ship.updateModelInstance();
 		shipInstance2.transform.rotate(Vector3.X, 0.2f);
 
-		thirdPerson.modelMatrix = shipTransform;
+		thirdPerson.modelMatrix = ship.physicalBody.transform;
 		thirdPerson.update();
 
 		skyboxInstance.transform.setToTranslationAndScaling(cam.position, skyboxScaleV);
@@ -137,10 +141,6 @@ public class SpaceRaceGame implements ApplicationListener {
 
 		decalBatch.add(sun);
 		decalBatch.flush();
-
-		/*spriteBatch.begin();
-		spriteBatch.draw(sunSprite, 0, 0);
-		spriteBatch.end();*/
 	}
 
 	@Override
