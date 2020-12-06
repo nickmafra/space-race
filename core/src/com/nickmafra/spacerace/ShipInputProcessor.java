@@ -49,7 +49,7 @@ public class ShipInputProcessor extends InputAdapter {
     public void update(float deltaTime) {
         if (boosting) {
             float velocityDelta = linearAcceleration * deltaTime;
-            Vector3 direction = minusZ.cpy().rot(ship.physicalBody.transform).nor();
+            Vector3 direction = minusZ.cpy().rot(ship.physicalBody.worldTransform).nor();
             ship.physicalBody.linearVelocity.add(direction.scl(velocityDelta));
 
             Vector2 diff = currentPosition.cpy().sub(initialPosition);
@@ -57,7 +57,7 @@ public class ShipInputProcessor extends InputAdapter {
             if (rotationPercent > 0) {
                 float angularVelocityDelta = rotationPercent * angularAcceleration * deltaTime;
                 Vector2 rotAxis2d = new Vector2(diff.x, -diff.y).rotate90(1);
-                Vector3 rotAxis3d = new Vector3(rotAxis2d, 0).rot(ship.physicalBody.transform).nor();
+                Vector3 rotAxis3d = new Vector3(rotAxis2d, 0).rot(ship.physicalBody.worldTransform).nor();
                 ship.physicalBody.angularVelocity.rotate(rotAxis3d, angularVelocityDelta);
             }
         }

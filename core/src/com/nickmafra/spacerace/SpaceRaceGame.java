@@ -1,6 +1,6 @@
 package com.nickmafra.spacerace;
 
-import com.badlogic.gdx.ApplicationListener;
+import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.GL20;
@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SpaceRaceGame implements ApplicationListener {
+public class SpaceRaceGame extends ApplicationAdapter {
 
 	ModelBatch modelBatch;
 	DecalBatch decalBatch;
@@ -67,10 +67,10 @@ public class SpaceRaceGame implements ApplicationListener {
 		Model skyboxModel = assets.get("mc-stars.obj", Model.class);
 		Texture sunTexture = assets.get("sun.png", Texture.class);
 
-		shipPlayer.load(assets);
+		shipPlayer.loadModelInstances(assets);
 
 		ship2 = new Ship();
-		ship2.load(assets);
+		ship2.loadModelInstances(assets);
 
 		bg.makeSun(sunTexture);
 		bg.skyboxInstance = new ModelInstance(skyboxModel);
@@ -100,17 +100,23 @@ public class SpaceRaceGame implements ApplicationListener {
 			}
 		}
 
+		// inputs
 		float deltaTime = Gdx.graphics.getDeltaTime();
 		inputProcessor.update(deltaTime);
-		shipPlayer.updatePhysics(deltaTime);
-		ship2.updatePhysics(deltaTime);
 
-		shipPlayer.updateModelInstance();
-		ship2.updateModelInstance();
+		// physics
+		for (Ship ship : ships) {
+			ship.physicalBody.updateByPhysics(deltaTime);
+		}
 
+		// referenced updates
+		for (Ship ship : ships) {
+			ship.updateWorldTransform();
+		}
 		cam.update();
-
 		bg.update();
+
+		// draw
 
 		Gdx.gl.glViewport(0, 0, Gdx.graphics.getWidth(), Gdx.graphics.getHeight());
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
@@ -119,7 +125,7 @@ public class SpaceRaceGame implements ApplicationListener {
 		modelBatch.begin(cam);
 		modelBatch.render(instances, environment);
 		for (Ship ship : ships) {
-			modelBatch.render(ship.instances, environment);
+			modelBatch.render(ship.modelObjectBody.instances, environment);
 		}
 		modelBatch.end();
 
@@ -133,17 +139,5 @@ public class SpaceRaceGame implements ApplicationListener {
 		decalBatch.dispose();
 		instances.clear();
 		assets.dispose();
-	}
-
-	@Override
-	public void resize(int width, int height) {
-	}
-
-	@Override
-	public void pause() {
-	}
-
-	@Override
-	public void resume() {
 	}
 }

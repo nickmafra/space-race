@@ -21,7 +21,7 @@ public class ShipCamera extends PerspectiveCamera {
     @Override
     public void update() {
         if (ship != null) {
-            thirdPerson.modelMatrix = ship.physicalBody.transform;
+            thirdPerson.setParent(ship.physicalBody);
             thirdPerson.update();
         }
         super.update();
