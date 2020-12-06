@@ -17,8 +17,8 @@ public class Ship {
     private final ModelObjectBody propRightObjectBody = new ModelObjectBody();
 
     public void loadModelInstances(AssetManager assets) {
-        Model bodyModel = assets.get(MODEL_BODY_NAME, Model.class);
-        Model propModel = assets.get(MODEL_PROP_NAME, Model.class);
+        Model bodyModel = assets.get(MODEL_BODY_NAME);
+        Model propModel = assets.get(MODEL_PROP_NAME);
 
         modelObjectBody.modelInstance = new ModelInstance(bodyModel);
         modelObjectBody.setParent(physicalBody);

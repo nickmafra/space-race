@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
+import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -21,7 +22,11 @@ public class SpaceRaceGame extends ApplicationAdapter {
 
 	ModelBatch modelBatch;
 	DecalBatch decalBatch;
+	BillboardParticleBatch particleBatch;
+
+	PropellantEmitter propellantEmitter = new PropellantEmitter();
 	AssetManager assets;
+
 	Array<ModelInstance> instances = new Array<>();
 	Environment environment;
 	boolean loading;
@@ -41,6 +46,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		modelBatch = new ModelBatch();
 		environment = new Environment();
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
+		particleBatch = PropellantEmitter.createBatch();
 
 		bg = new BackGround();
 		bg.configEnvironment(environment);
@@ -49,6 +55,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		cam.ship = shipPlayer;
 		cam.update();
 		bg.camera = cam;
+		particleBatch.setCamera(cam);
 
 		inputProcessor = new ShipInputProcessor();
 		inputProcessor.ship = shipPlayer;
@@ -60,12 +67,21 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		}
 		assets.load("mc-stars.obj", Model.class);
 		assets.load("sun.png", Texture.class);
+		assets.load("particle.png", Texture.class);
+
 		loading = true;
 	}
 
 	private void doneLoading() {
-		Model skyboxModel = assets.get("mc-stars.obj", Model.class);
-		Texture sunTexture = assets.get("sun.png", Texture.class);
+		Model skyboxModel = assets.get("mc-stars.obj");
+		Texture sunTexture = assets.get("sun.png");
+		Texture particleTexture = assets.get("particle.png");
+
+		particleBatch.setTexture(particleTexture);
+
+		propellantEmitter = new PropellantEmitter();
+		propellantEmitter.create(particleTexture, particleBatch);
+		propellantEmitter.start();
 
 		shipPlayer.loadModelInstances(assets);
 
@@ -81,7 +97,6 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		ships.add(ship2);
 
 		shipPlayer.physicalBody.position.set(0, 0, 0);
-		shipPlayer.physicalBody.rotation.rotate(Vector3.Y, 180);
 
 		ship2.physicalBody.position.add(-5, 0, 5);
 		ship2.physicalBody.linearVelocity.set(0, 0, -0.3f);
@@ -108,6 +123,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		for (Ship ship : ships) {
 			ship.physicalBody.updateByPhysics(deltaTime);
 		}
+		propellantEmitter.update(Gdx.graphics.getDeltaTime());
 
 		// referenced updates
 		for (Ship ship : ships) {
@@ -123,10 +139,17 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
 		modelBatch.begin(cam);
+
 		modelBatch.render(instances, environment);
 		for (Ship ship : ships) {
 			modelBatch.render(ship.modelObjectBody.instances, environment);
 		}
+
+		particleBatch.begin();
+		propellantEmitter.draw();
+		particleBatch.end();
+		modelBatch.render(particleBatch, environment);
+
 		modelBatch.end();
 
 		decalBatch.add(bg.sunDecal);
