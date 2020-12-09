@@ -11,7 +11,6 @@ import com.badlogic.gdx.graphics.g3d.ModelBatch;
 import com.badlogic.gdx.graphics.g3d.ModelInstance;
 import com.badlogic.gdx.graphics.g3d.decals.CameraGroupStrategy;
 import com.badlogic.gdx.graphics.g3d.decals.DecalBatch;
-import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 
@@ -22,9 +21,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 
 	ModelBatch modelBatch;
 	DecalBatch decalBatch;
-	BillboardParticleBatch particleBatch;
 
-	PropellantEmitter propellantEmitter = new PropellantEmitter();
 	AssetManager assets;
 
 	Array<ModelInstance> instances = new Array<>();
@@ -46,7 +43,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		modelBatch = new ModelBatch();
 		environment = new Environment();
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
-		particleBatch = PropellantEmitter.createBatch();
+		PropellantEmitter.createStatic(cam);
 
 		bg = new BackGround();
 		bg.configEnvironment(environment);
@@ -55,7 +52,6 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		cam.ship = shipPlayer;
 		cam.update();
 		bg.camera = cam;
-		particleBatch.setCamera(cam);
 
 		inputProcessor = new ShipInputProcessor();
 		inputProcessor.ship = shipPlayer;
@@ -67,7 +63,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		}
 		assets.load("mc-stars.obj", Model.class);
 		assets.load("sun.png", Texture.class);
-		assets.load("particle.png", Texture.class);
+		assets.load(PropellantEmitter.TEXTURE_NAME, Texture.class);
 
 		loading = true;
 	}
@@ -75,18 +71,12 @@ public class SpaceRaceGame extends ApplicationAdapter {
 	private void doneLoading() {
 		Model skyboxModel = assets.get("mc-stars.obj");
 		Texture sunTexture = assets.get("sun.png");
-		Texture particleTexture = assets.get("particle.png");
+		PropellantEmitter.load(assets);
 
-		particleBatch.setTexture(particleTexture);
-
-		propellantEmitter = new PropellantEmitter();
-		propellantEmitter.create(particleTexture, particleBatch);
-		propellantEmitter.start();
-
-		shipPlayer.loadModelInstances(assets);
+		shipPlayer.load(assets);
 
 		ship2 = new Ship();
-		ship2.loadModelInstances(assets);
+		ship2.load(assets);
 
 		bg.makeSun(sunTexture);
 		bg.skyboxInstance = new ModelInstance(skyboxModel);
@@ -98,8 +88,8 @@ public class SpaceRaceGame extends ApplicationAdapter {
 
 		shipPlayer.physicalBody.position.set(0, 0, 0);
 
-		ship2.physicalBody.position.add(-5, 0, 5);
-		ship2.physicalBody.linearVelocity.set(0, 0, -0.3f);
+		ship2.physicalBody.position.add(0, 2, -5);
+		//ship2.physicalBody.linearVelocity.set(0, 0, -0.3f);
 		ship2.physicalBody.angularVelocity.rotate(Vector3.X, -20f);
 
 		loading = false;
@@ -115,22 +105,26 @@ public class SpaceRaceGame extends ApplicationAdapter {
 			}
 		}
 
-		// inputs
 		float deltaTime = Gdx.graphics.getDeltaTime();
+
+		// inputs
 		inputProcessor.update(deltaTime);
 
 		// physics
 		for (Ship ship : ships) {
-			ship.physicalBody.updateByPhysics(deltaTime);
+			ship.updateByPhysics(deltaTime);
 		}
-		propellantEmitter.setTransform(shipPlayer.physicalBody.localTransform);
-		propellantEmitter.setVelocity(shipPlayer.physicalBody.linearVelocity);
-		propellantEmitter.update(Gdx.graphics.getDeltaTime());
 
 		// referenced updates
 		for (Ship ship : ships) {
 			ship.updateWorldTransform();
 		}
+
+		// particle physics
+		for (Ship ship : ships) {
+			ship.updateParticles(deltaTime);
+		}
+
 		cam.update();
 		bg.update();
 
@@ -140,6 +134,9 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT | GL20.GL_DEPTH_BUFFER_BIT);
 		Gdx.gl.glEnable(GL20.GL_DEPTH_TEST);
 
+		decalBatch.add(bg.sunDecal);
+		decalBatch.flush();
+
 		modelBatch.begin(cam);
 
 		modelBatch.render(instances, environment);
@@ -147,15 +144,14 @@ public class SpaceRaceGame extends ApplicationAdapter {
 			modelBatch.render(ship.modelObjectBody.instances, environment);
 		}
 
-		particleBatch.begin();
-		propellantEmitter.draw();
-		particleBatch.end();
-		modelBatch.render(particleBatch, environment);
+		PropellantEmitter.batch.begin();
+		for (Ship ship : ships) {
+			ship.drawParticles();
+		}
+		PropellantEmitter.batch.end();
+		modelBatch.render(PropellantEmitter.batch, environment);
 
 		modelBatch.end();
-
-		decalBatch.add(bg.sunDecal);
-		decalBatch.flush();
 	}
 
 	@Override

@@ -6,36 +6,53 @@ import com.badlogic.gdx.graphics.g3d.ModelInstance;
 
 public class Ship {
 
-    private static final String MODEL_BODY_NAME = "ship_body.g3db";
-    private static final String MODEL_PROP_NAME = "ship_prop.g3db";
-    protected static final String[] MODEL_NAMES = new String[] { MODEL_BODY_NAME, MODEL_PROP_NAME };
+    public static final String MODEL_NAME = "ship_body.g3db";
+    protected static final String[] MODEL_NAMES = new String[] {MODEL_NAME, ShipPropeller.MODEL_NAME };
 
     public final PhysicalBody physicalBody = new PhysicalBody();
 
     public final ModelObjectBody modelObjectBody = new ModelObjectBody();
-    private final ModelObjectBody propLeftObjectBody = new ModelObjectBody();
-    private final ModelObjectBody propRightObjectBody = new ModelObjectBody();
+    private final ShipPropeller propLeft = new ShipPropeller();
+    private final ShipPropeller propRight = new ShipPropeller();
 
-    public void loadModelInstances(AssetManager assets) {
-        Model bodyModel = assets.get(MODEL_BODY_NAME);
-        Model propModel = assets.get(MODEL_PROP_NAME);
+    public Ship() {
+        propLeft.ship = this;
+        propRight.ship = this;
+    }
 
-        modelObjectBody.modelInstance = new ModelInstance(bodyModel);
+    public void load(AssetManager assets) {
+        modelObjectBody.modelInstance = new ModelInstance((Model) assets.get(MODEL_NAME));
         modelObjectBody.setParent(physicalBody);
 
-        propLeftObjectBody.modelInstance = new ModelInstance(propModel);
-        propLeftObjectBody.localTransform.translate(-0.5f, 0, 0);
-        propLeftObjectBody.setParent(modelObjectBody);
+        propLeft.load(assets);
+        propLeft.modelObjectBody.localTransform.translate(-0.5f, 0, 0);
+        propLeft.modelObjectBody.setParent(modelObjectBody);
 
-        propRightObjectBody.modelInstance = new ModelInstance(propModel);
-        propRightObjectBody.localTransform.translate(0.5f, 0, 0);
-        propRightObjectBody.setParent(modelObjectBody);
+        propRight.load(assets);
+        propRight.modelObjectBody.localTransform.translate(0.5f, 0, 0);
+        propRight.modelObjectBody.setParent(modelObjectBody);
 
         modelObjectBody.updateInstancesList();
+    }
+
+    public void updateByPhysics(float deltaTime) {
+        physicalBody.updateByPhysics(deltaTime);
+    }
+
+    public void updateParticles(float deltaTime) {
+        propLeft.updateParticles(deltaTime);
+        propRight.updateParticles(deltaTime);
     }
 
     public void updateWorldTransform() {
         physicalBody.updateWorldTransform();
         modelObjectBody.updateWorldTransform(); // recursive
+        propLeft.updateWorldTransform();
+        propRight.updateWorldTransform();
+    }
+
+    public void drawParticles() {
+        propLeft.drawParticles();
+        propRight.drawParticles();
     }
 }

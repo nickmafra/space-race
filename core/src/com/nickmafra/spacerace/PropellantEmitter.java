@@ -1,5 +1,7 @@
 package com.nickmafra.spacerace;
 
+import com.badlogic.gdx.assets.AssetManager;
+import com.badlogic.gdx.graphics.Camera;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
@@ -17,21 +19,31 @@ import java.awt.*;
 
 public class PropellantEmitter {
 
-    private float[] colorsTimeline = new float[] {0};
-    private Color[] colors = new Color[] { new Color(1f, 0.2f, 0.05f) };
+    public static final String TEXTURE_NAME = "particle.png";
+
+    private static float[] colorsTimeline = new float[] {0};
+    private static Color[] colors = new Color[] { new Color(1f, 0.2f, 0.05f) };
+
+    public static BillboardParticleBatch batch;
+    public static Texture texture;
 
     RegularEmitter emitter;
-    PointSpawnShapeValue pointSpawnShapeValue;
+    RegionInfluencer regionInfluencer;
+    SpawnInfluencer spawnSource;
     ScaleInfluencer scaleInfluencer;
     ColorInfluencer.Single colorInfluencer;
+
     InertialInfluencer inertialInfluencer;
+
+    DynamicsInfluencer dynamicsInfluencer;
     DynamicsModifier.PolarAcceleration velocityPolarModifier;
+
     public ParticleController controller;
 
     float speed = 1f;
 
-    private float[] tempColorArray = new float[3];
-    private float[] getFloatColors() {
+    private static float[] tempColorArray = new float[3];
+    private static float[] getFloatColors() {
         float[] floatColors = new float[3 * colors.length];
         for (int i = 0; i < colors.length; i++) {
             colors[i].getColorComponents(tempColorArray);
@@ -42,12 +54,28 @@ public class PropellantEmitter {
         return floatColors;
     }
 
-    public static BillboardParticleBatch createBatch() {
-        return new BillboardParticleBatch(ParticleShader.AlignMode.Screen, false, 100,
+    public static void createStatic(Camera camera) {
+        batch = new BillboardParticleBatch(ParticleShader.AlignMode.Screen, false, 100,
                 new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE), null);
+        batch.setCamera(camera);
     }
 
-    public void create(Texture particleTexture, BillboardParticleBatch batch) {
+    private static void checkCreated() {
+        if (batch == null) {
+            throw new IllegalStateException("must call createStatic before this method");
+        }
+    }
+
+    public static void load(AssetManager assets) {
+        checkCreated();
+        texture = assets.get(TEXTURE_NAME);
+        //regionInfluencer.add(new TextureRegion(texture));
+        batch.setTexture(texture);
+    }
+
+    public void create() {
+        checkCreated();
+
         // Emission
         emitter = new RegularEmitter();
         emitter.getDuration().setActive(false);
@@ -56,9 +84,10 @@ public class PropellantEmitter {
         emitter.setMaxParticleCount(3000);
         //emitter.setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);
 
+        regionInfluencer = new RegionInfluencer.Single(texture);
+
         // Spawn
-        pointSpawnShapeValue = new PointSpawnShapeValue();
-        SpawnInfluencer spawnSource = new SpawnInfluencer(pointSpawnShapeValue);
+        spawnSource = new SpawnInfluencer(new PointSpawnShapeValue());
 
         // Scale
         scaleInfluencer = new ScaleInfluencer();
@@ -74,11 +103,8 @@ public class PropellantEmitter {
         colorInfluencer.colorValue.setTimeline(colorsTimeline);
         colorInfluencer.colorValue.setColors(getFloatColors());
 
-        // InertialInfluencer
-        inertialInfluencer = new InertialInfluencer();
-
         // Dynamics
-        DynamicsInfluencer dynamicsInfluencer = new DynamicsInfluencer();
+        dynamicsInfluencer = new DynamicsInfluencer();
         velocityPolarModifier = new DynamicsModifier.PolarAcceleration();
         velocityPolarModifier.strengthValue.setHigh(5, 10);
         velocityPolarModifier.thetaValue.setHigh(0, 360);
@@ -88,8 +114,11 @@ public class PropellantEmitter {
         velocityPolarModifier.phiValue.setTimeline(new float[] { 0, 0.5f, 1});
         dynamicsInfluencer.velocities.add(velocityPolarModifier);
 
-        controller = new ParticleController("Billboard Controller", emitter, new BillboardRenderer(batch),
-                new RegionInfluencer.Single(particleTexture),
+        // InertialInfluencer
+        inertialInfluencer = new InertialInfluencer();
+
+        controller = new ParticleController("PropellantEmitter", emitter, new BillboardRenderer(batch),
+                regionInfluencer,
                 spawnSource,
                 scaleInfluencer,
                 colorInfluencer,
@@ -101,6 +130,10 @@ public class PropellantEmitter {
 
     public void start() {
         controller.start();
+    }
+
+    public void end() {
+        controller.end();
     }
 
     public void update(float deltaTime) {
