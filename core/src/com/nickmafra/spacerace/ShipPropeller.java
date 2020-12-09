@@ -24,11 +24,8 @@ public class ShipPropeller {
         propellantEmitter.start();
     }
 
-    public void updateWorldTransform() {
+    public void update(float deltaTime) {
         propellantObjectBody.updateWorldTransform();
-    }
-
-    public void updateParticles(float deltaTime) {
         propellantEmitter.setTransform(propellantObjectBody.worldTransform);
         propellantEmitter.setVelocity(ship.physicalBody.linearVelocity);
         propellantEmitter.update(deltaTime);

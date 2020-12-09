@@ -110,19 +110,8 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		// inputs
 		inputProcessor.update(deltaTime);
 
-		// physics
 		for (Ship ship : ships) {
-			ship.updateByPhysics(deltaTime);
-		}
-
-		// referenced updates
-		for (Ship ship : ships) {
-			ship.updateWorldTransform();
-		}
-
-		// particle physics
-		for (Ship ship : ships) {
-			ship.updateParticles(deltaTime);
+			ship.update(deltaTime);
 		}
 
 		cam.update();

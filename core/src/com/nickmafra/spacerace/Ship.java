@@ -35,20 +35,12 @@ public class Ship {
         modelObjectBody.updateInstancesList();
     }
 
-    public void updateByPhysics(float deltaTime) {
+    public void update(float deltaTime) {
         physicalBody.updateByPhysics(deltaTime);
-    }
-
-    public void updateParticles(float deltaTime) {
-        propLeft.updateParticles(deltaTime);
-        propRight.updateParticles(deltaTime);
-    }
-
-    public void updateWorldTransform() {
         physicalBody.updateWorldTransform();
         modelObjectBody.updateWorldTransform(); // recursive
-        propLeft.updateWorldTransform();
-        propRight.updateWorldTransform();
+        propLeft.update(deltaTime);
+        propRight.update(deltaTime);
     }
 
     public void drawParticles() {
