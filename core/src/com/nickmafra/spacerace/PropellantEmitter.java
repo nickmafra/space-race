@@ -41,6 +41,10 @@ public class PropellantEmitter {
     public ParticleController controller;
 
     float speed = 1f;
+    float size = 0.3f;
+    float strength = 1f;
+    float life = 500f;
+    int count = 1000;
 
     private static float[] tempColorArray = new float[3];
     private static float[] getFloatColors() {
@@ -80,8 +84,8 @@ public class PropellantEmitter {
         emitter = new RegularEmitter();
         emitter.getDuration().setActive(false);
         emitter.getEmission().setHigh(2900);
-        emitter.getLife().setHigh(500, 1000);
-        emitter.setMaxParticleCount(3000);
+        emitter.getLife().setHigh(life, life * 2);
+        emitter.setMaxParticleCount(count);
         //emitter.setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);
 
         regionInfluencer = new RegionInfluencer.Single(texture);
@@ -92,7 +96,7 @@ public class PropellantEmitter {
         // Scale
         scaleInfluencer = new ScaleInfluencer();
         scaleInfluencer.value.setTimeline(new float[]{0, 1});
-        scaleInfluencer.value.setScaling(new float[]{0, 1});
+        scaleInfluencer.value.setScaling(new float[]{0, size});
         scaleInfluencer.value.setLow(0);
         scaleInfluencer.value.setHigh(0.3f);
 
@@ -106,7 +110,7 @@ public class PropellantEmitter {
         // Dynamics
         dynamicsInfluencer = new DynamicsInfluencer();
         velocityPolarModifier = new DynamicsModifier.PolarAcceleration();
-        velocityPolarModifier.strengthValue.setHigh(5, 10);
+        velocityPolarModifier.strengthValue.setHigh(strength, 2 * strength);
         velocityPolarModifier.thetaValue.setHigh(0, 360);
         velocityPolarModifier.phiValue.setActive(true);
         velocityPolarModifier.phiValue.setHigh(-35, 35);
