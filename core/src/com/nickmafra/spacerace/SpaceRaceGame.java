@@ -123,6 +123,8 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		for (Ship ship : ships) {
 			ship.physicalBody.updateByPhysics(deltaTime);
 		}
+		propellantEmitter.setTransform(shipPlayer.physicalBody.localTransform);
+		propellantEmitter.setVelocity(shipPlayer.physicalBody.linearVelocity);
 		propellantEmitter.update(Gdx.graphics.getDeltaTime());
 
 		// referenced updates

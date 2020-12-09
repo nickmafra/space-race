@@ -10,6 +10,8 @@ import com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter;
 import com.badlogic.gdx.graphics.g3d.particles.influencers.*;
 import com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardRenderer;
 import com.badlogic.gdx.graphics.g3d.particles.values.PointSpawnShapeValue;
+import com.badlogic.gdx.math.Matrix4;
+import com.badlogic.gdx.math.Vector3;
 
 import java.awt.*;
 
@@ -22,10 +24,11 @@ public class PropellantEmitter {
     PointSpawnShapeValue pointSpawnShapeValue;
     ScaleInfluencer scaleInfluencer;
     ColorInfluencer.Single colorInfluencer;
+    InertialInfluencer inertialInfluencer;
     DynamicsModifier.PolarAcceleration velocityPolarModifier;
     public ParticleController controller;
 
-    float speed = 0.1f;
+    float speed = 1f;
 
     private float[] tempColorArray = new float[3];
     private float[] getFloatColors() {
@@ -71,6 +74,9 @@ public class PropellantEmitter {
         colorInfluencer.colorValue.setTimeline(colorsTimeline);
         colorInfluencer.colorValue.setColors(getFloatColors());
 
+        // InertialInfluencer
+        inertialInfluencer = new InertialInfluencer();
+
         // Dynamics
         DynamicsInfluencer dynamicsInfluencer = new DynamicsInfluencer();
         velocityPolarModifier = new DynamicsModifier.PolarAcceleration();
@@ -87,7 +93,8 @@ public class PropellantEmitter {
                 spawnSource,
                 scaleInfluencer,
                 colorInfluencer,
-                dynamicsInfluencer
+                dynamicsInfluencer,
+                inertialInfluencer
         );
         controller.init();
     }
@@ -102,5 +109,13 @@ public class PropellantEmitter {
 
     public void draw() {
         controller.draw();
+    }
+
+    public void setVelocity(Vector3 velocity) {
+        inertialInfluencer.velocity.set(velocity);
+    }
+
+    public void setTransform(Matrix4 transform) {
+        controller.setTransform(transform);
     }
 }
