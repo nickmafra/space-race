@@ -34,15 +34,13 @@ public class PropellantEmitter {
     ColorInfluencer.Single colorInfluencer;
 
     InertialInfluencer inertialInfluencer;
-
-    DynamicsInfluencer dynamicsInfluencer;
-    DynamicsModifier.PolarAcceleration velocityPolarModifier;
+    PolarInertialModifier polarInertialModifier;
 
     public ParticleController controller;
 
     float speed = 1f;
     float size = 0.3f;
-    float strength = 1f;
+    float strength = 0.2f;
     float life = 500f;
     int count = 1000;
 
@@ -107,26 +105,20 @@ public class PropellantEmitter {
         colorInfluencer.colorValue.setTimeline(colorsTimeline);
         colorInfluencer.colorValue.setColors(getFloatColors());
 
-        // Dynamics
-        dynamicsInfluencer = new DynamicsInfluencer();
-        velocityPolarModifier = new DynamicsModifier.PolarAcceleration();
-        velocityPolarModifier.strengthValue.setHigh(strength, 2 * strength);
-        velocityPolarModifier.thetaValue.setHigh(0, 360);
-        velocityPolarModifier.phiValue.setActive(true);
-        velocityPolarModifier.phiValue.setHigh(-35, 35);
-        velocityPolarModifier.phiValue.setScaling(new float[] { 1, 0, 0});
-        velocityPolarModifier.phiValue.setTimeline(new float[] { 0, 0.5f, 1});
-        dynamicsInfluencer.velocities.add(velocityPolarModifier);
-
         // InertialInfluencer
         inertialInfluencer = new InertialInfluencer();
+        polarInertialModifier = new PolarInertialModifier();
+        polarInertialModifier.strengthValue.setLow(strength, 2 * strength);
+        polarInertialModifier.phiValue.setLowMax(5);
+        polarInertialModifier.thetaValue.setLow(0, 360);
+        inertialInfluencer.modifiers.add(polarInertialModifier);
+
 
         controller = new ParticleController("PropellantEmitter", emitter, new BillboardRenderer(batch),
                 regionInfluencer,
                 spawnSource,
                 scaleInfluencer,
                 colorInfluencer,
-                dynamicsInfluencer,
                 inertialInfluencer
         );
         controller.init();
