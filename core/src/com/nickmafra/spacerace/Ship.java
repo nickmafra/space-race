@@ -24,13 +24,13 @@ public class Ship {
         modelObjectBody.modelInstance = new ModelInstance((Model) assets.get(MODEL_NAME));
         modelObjectBody.setParent(physicalBody);
 
-        propLeft.load(assets);
-        propLeft.modelObjectBody.localTransform.translate(-0.5f, 0, 0);
         propLeft.modelObjectBody.setParent(modelObjectBody);
+        propLeft.modelObjectBody.localTransform.translate(-0.5f, 0, 0);
+        propLeft.load(assets);
 
-        propRight.load(assets);
-        propRight.modelObjectBody.localTransform.translate(0.5f, 0, 0);
         propRight.modelObjectBody.setParent(modelObjectBody);
+        propRight.modelObjectBody.localTransform.translate(0.5f, 0, 0);
+        propRight.load(assets);
 
         modelObjectBody.updateInstancesList();
     }
