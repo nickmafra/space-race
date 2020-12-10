@@ -12,8 +12,8 @@ public class Ship {
     public final PhysicalBody physicalBody = new PhysicalBody();
 
     public final ModelObjectBody modelObjectBody = new ModelObjectBody();
-    private final ShipPropeller propLeft = new ShipPropeller();
-    private final ShipPropeller propRight = new ShipPropeller();
+    public final ShipPropeller propLeft = new ShipPropeller();
+    public final ShipPropeller propRight = new ShipPropeller();
 
     public Ship() {
         propLeft.ship = this;
@@ -25,11 +25,11 @@ public class Ship {
         modelObjectBody.setParent(physicalBody);
 
         propLeft.modelObjectBody.setParent(modelObjectBody);
-        propLeft.modelObjectBody.localTransform.translate(-0.5f, 0, 0);
+        propLeft.relativeTransform.translate(-0.5f, -0.05f, 0);
         propLeft.load(assets);
 
         propRight.modelObjectBody.setParent(modelObjectBody);
-        propRight.modelObjectBody.localTransform.translate(0.5f, 0, 0);
+        propRight.relativeTransform.translate(0.5f, -0.05f, 0);
         propRight.load(assets);
 
         modelObjectBody.updateInstancesList();

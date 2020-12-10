@@ -21,8 +21,8 @@ public class PropellantEmitter {
 
     public static final String TEXTURE_NAME = "particle.png";
 
-    private static float[] colorsTimeline = new float[] {0};
-    private static Color[] colors = new Color[] { new Color(1f, 0.2f, 0.05f) };
+    private static final float[] colorsTimeline = new float[] {0};
+    private static final Color[] colors = new Color[] { new Color(1f, 0.2f, 0.05f) };
 
     public static BillboardParticleBatch batch;
     public static Texture texture;
@@ -44,7 +44,8 @@ public class PropellantEmitter {
     float life = 500f;
     int count = 1000;
 
-    private static float[] tempColorArray = new float[3];
+    private static final float[] tempColorArray = new float[3];
+
     private static float[] getFloatColors() {
         float[] floatColors = new float[3 * colors.length];
         for (int i = 0; i < colors.length; i++) {
@@ -71,7 +72,6 @@ public class PropellantEmitter {
     public static void load(AssetManager assets) {
         checkCreated();
         texture = assets.get(TEXTURE_NAME);
-        //regionInfluencer.add(new TextureRegion(texture));
         batch.setTexture(texture);
     }
 
@@ -84,7 +84,7 @@ public class PropellantEmitter {
         emitter.getEmission().setHigh(2900);
         emitter.getLife().setHigh(life, life * 2);
         emitter.setMaxParticleCount(count);
-        //emitter.setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);
+        emitter.setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);
 
         regionInfluencer = new RegionInfluencer.Single(texture);
 
@@ -126,10 +126,11 @@ public class PropellantEmitter {
 
     public void start() {
         controller.start();
+        emitter.setEmissionMode(RegularEmitter.EmissionMode.Enabled);
     }
 
     public void end() {
-        controller.end();
+        emitter.setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);
     }
 
     public void update(float deltaTime) {
