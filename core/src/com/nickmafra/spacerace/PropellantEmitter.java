@@ -29,7 +29,7 @@ public class PropellantEmitter {
 
     RegularEmitter emitter;
     RegionInfluencer regionInfluencer;
-    SpawnInfluencer spawnSource;
+    FixedSpawnInfluencer spawnSource;
     ScaleInfluencer scaleInfluencer;
     ColorInfluencer.Single colorInfluencer;
 
@@ -91,7 +91,7 @@ public class PropellantEmitter {
         regionInfluencer = new RegionInfluencer.Single(texture);
 
         // Spawn
-        spawnSource = new SpawnInfluencer(new PointSpawnShapeValue());
+        spawnSource = new FixedSpawnInfluencer();
 
         // Scale
         scaleInfluencer = new ScaleInfluencer();
