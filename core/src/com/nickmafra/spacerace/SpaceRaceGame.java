@@ -105,7 +105,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 			}
 		}
 
-		float deltaTime = 0.02f;
+		float deltaTime = Gdx.graphics.getDeltaTime();
 
 		// inputs
 		inputProcessor.update(deltaTime);

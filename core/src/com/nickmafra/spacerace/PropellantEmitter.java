@@ -2,6 +2,7 @@ package com.nickmafra.spacerace;
 
 import com.badlogic.gdx.assets.AssetManager;
 import com.badlogic.gdx.graphics.Camera;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g3d.attributes.BlendingAttribute;
@@ -9,20 +10,19 @@ import com.badlogic.gdx.graphics.g3d.particles.ParticleController;
 import com.badlogic.gdx.graphics.g3d.particles.ParticleShader;
 import com.badlogic.gdx.graphics.g3d.particles.batches.BillboardParticleBatch;
 import com.badlogic.gdx.graphics.g3d.particles.emitters.RegularEmitter;
-import com.badlogic.gdx.graphics.g3d.particles.influencers.*;
+import com.badlogic.gdx.graphics.g3d.particles.influencers.ColorInfluencer;
+import com.badlogic.gdx.graphics.g3d.particles.influencers.RegionInfluencer;
+import com.badlogic.gdx.graphics.g3d.particles.influencers.ScaleInfluencer;
 import com.badlogic.gdx.graphics.g3d.particles.renderers.BillboardRenderer;
-import com.badlogic.gdx.graphics.g3d.particles.values.PointSpawnShapeValue;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector3;
-
-import java.awt.*;
 
 public class PropellantEmitter {
 
     public static final String TEXTURE_NAME = "particle.png";
 
     private static final float[] colorsTimeline = new float[] {0};
-    private static final Color[] colors = new Color[] { new Color(1f, 0.2f, 0.05f) };
+    private static final Color[] colors = new Color[] { new Color(1f, 0.3f, 0.05f, 1f) };
 
     public static BillboardParticleBatch batch;
     public static Texture texture;
@@ -39,20 +39,17 @@ public class PropellantEmitter {
     public ParticleController controller;
 
     float speed = 1f;
-    float size = 0.3f;
+    float size = 0.5f;
     float strength = 0.2f;
     float life = 500f;
-    int count = 1000;
-
-    private static final float[] tempColorArray = new float[3];
+    int count = 50;
 
     private static float[] getFloatColors() {
         float[] floatColors = new float[3 * colors.length];
         for (int i = 0; i < colors.length; i++) {
-            colors[i].getColorComponents(tempColorArray);
-            floatColors[3 * i] = tempColorArray[0];
-            floatColors[3 * i + 1] = tempColorArray[1];
-            floatColors[3 * i + 2] = tempColorArray[2];
+            floatColors[3 * i] = colors[i].r;
+            floatColors[3 * i + 1] = colors[i].g;
+            floatColors[3 * i + 2] = colors[i].b;
         }
         return floatColors;
     }
@@ -81,7 +78,7 @@ public class PropellantEmitter {
         // Emission
         emitter = new RegularEmitter();
         emitter.getDuration().setActive(false);
-        emitter.getEmission().setHigh(2900);
+        emitter.getEmission().setHigh(count / 2f, count);
         emitter.getLife().setHigh(life, life * 2);
         emitter.setMaxParticleCount(count);
         emitter.setEmissionMode(RegularEmitter.EmissionMode.EnabledUntilCycleEnd);

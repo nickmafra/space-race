@@ -15,7 +15,7 @@ public class BackGround {
 
     Camera camera;
 
-    float ambientLightIntensity = 0.5f;
+    float ambientLightIntensity = 0.8f;
     Color ambientColor = new Color(ambientLightIntensity, ambientLightIntensity, ambientLightIntensity, 1f);
 
     float skyboxScale = 2;
