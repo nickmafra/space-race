@@ -54,10 +54,14 @@ public class PropellantEmitter {
         return floatColors;
     }
 
-    public static void createStatic(Camera camera) {
+    public static void config(Camera camera) {
         batch = new BillboardParticleBatch(ParticleShader.AlignMode.Screen, false, 100,
                 new BlendingAttribute(GL20.GL_SRC_ALPHA, GL20.GL_ONE), null);
         batch.setCamera(camera);
+    }
+
+    public static void load(AssetManager assets) {
+        assets.load(TEXTURE_NAME, Texture.class);
     }
 
     private static void checkCreated() {
@@ -66,7 +70,7 @@ public class PropellantEmitter {
         }
     }
 
-    public static void load(AssetManager assets) {
+    public static void createStatic(AssetManager assets) {
         checkCreated();
         texture = assets.get(TEXTURE_NAME);
         batch.setTexture(texture);

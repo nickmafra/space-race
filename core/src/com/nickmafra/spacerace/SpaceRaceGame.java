@@ -35,6 +35,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 	Ship shipPlayer;
 	Ship ship2;
 	List<Ship> ships;
+	MeteorSet meteorSet;
 
 	@Override
 	public void create () {
@@ -43,7 +44,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		modelBatch = new ModelBatch();
 		environment = new Environment();
 		decalBatch = new DecalBatch(new CameraGroupStrategy(cam));
-		PropellantEmitter.createStatic(cam);
+		PropellantEmitter.config(cam);
 
 		bg = new BackGround();
 		bg.configEnvironment(environment);
@@ -63,7 +64,9 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		}
 		assets.load("mc-stars.obj", Model.class);
 		assets.load("sun.png", Texture.class);
-		assets.load(PropellantEmitter.TEXTURE_NAME, Texture.class);
+		PropellantEmitter.load(assets);
+		MeteorSet.load(assets);
+		meteorSet = new MeteorSet();
 
 		loading = true;
 	}
@@ -71,7 +74,8 @@ public class SpaceRaceGame extends ApplicationAdapter {
 	private void doneLoading() {
 		Model skyboxModel = assets.get("mc-stars.obj");
 		Texture sunTexture = assets.get("sun.png");
-		PropellantEmitter.load(assets);
+		PropellantEmitter.createStatic(assets);
+		MeteorSet.createStatic(assets);
 
 		shipPlayer.load(assets);
 
@@ -86,7 +90,8 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		ships.add(shipPlayer);
 		ships.add(ship2);
 
-		shipPlayer.physicalBody.position.set(0, 0, 0);
+		meteorSet.centerOfSet.set(0, 0, -50);
+		meteorSet.create(50);
 
 		ship2.physicalBody.position.add(0, 2, -5);
 		//ship2.physicalBody.linearVelocity.set(0, 0, -0.3f);
@@ -113,6 +118,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		for (Ship ship : ships) {
 			ship.update(deltaTime);
 		}
+		meteorSet.update(deltaTime);
 
 		cam.update();
 		bg.update();
@@ -132,6 +138,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		for (Ship ship : ships) {
 			modelBatch.render(ship.modelObjectBody.instances, environment);
 		}
+		modelBatch.render(meteorSet.modelInstances, environment);
 
 		PropellantEmitter.batch.begin();
 		for (Ship ship : ships) {

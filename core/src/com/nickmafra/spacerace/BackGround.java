@@ -23,7 +23,7 @@ public class BackGround {
 
     float sunSize = 100;
     float sunDistance = 100;
-    Vector3 sunDisplacement = Vector3.X.cpy().scl(sunDistance);
+    Vector3 sunDisplacement = Vector3.Z.cpy().scl(-sunDistance);
     Vector3 sunUp = Vector3.Y;
 
     ModelInstance skyboxInstance;
