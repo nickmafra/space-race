@@ -1,84 +1,56 @@
 package com.nickmafra.spacerace;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.InputAdapter;
-import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Quaternion;
-import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.math.Vector3;
 
 public class ShipInputProcessor extends InputAdapter {
 
-    public Ship ship;
+    private Ship ship;
+    private final ShipPropellerInputProcessor left = new ShipPropellerInputProcessor();
+    private final ShipPropellerInputProcessor right = new ShipPropellerInputProcessor();
 
-    public float maxDiffSize = 50;
-    public float deadZone = 0.1f;
+    public float screenSidePercent = 0.3f;
 
-    private boolean boosting;
-    private Vector2 initialPosition = new Vector2();
-    private Vector2 currentPosition = new Vector2();
+    public void setShip(Ship ship) {
+        this.ship = ship;
+        left.prop = ship.propLeft;
+        right.prop = ship.propRight;
+    }
 
-    private final Quaternion tempQ = new Quaternion();
+    private boolean isLeft(float pX) {
+        return pX < 1 - screenSidePercent;
+    }
+
+    private boolean isRight(float pX) {
+        return pX > screenSidePercent;
+    }
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-        boosting = true;
-        ship.propLeft.setBosting(true);
-        ship.propRight.setBosting(true);
-        initialPosition.set(screenX, screenY);
-        currentPosition.set(initialPosition);
-        return true;
+        float pX = screenX / (float) Gdx.graphics.getWidth();
+        boolean r = false;
+        if (isLeft(pX)) {
+            r |= left.touchDown(screenX, screenY, pointer, button);
+        }
+        if (isRight(pX)) {
+            r |= right.touchDown(screenX, screenY, pointer, button);
+        }
+        return r;
     }
 
     @Override
     public boolean touchDragged(int screenX, int screenY, int pointer) {
-        if (boosting) {
-
-            currentPosition.set(screenX, screenY);
-
-            Vector2 diff = currentPosition.cpy().sub(initialPosition);
-            float rotationPercent = calcRotationPercent(diff.len());
-            Vector2 dir = new Vector2(diff.x, -diff.y).nor();
-            Vector3 relativeDir = calcRelativeDir(rotationPercent, dir);
-            Quaternion rotation = tempQ.setFromCross(Vector3.Z, relativeDir);
-            ship.propLeft.setRotation(rotation);
-            ship.propRight.setRotation(rotation);
-
-            return true;
-        } else {
-            return false;
-        }
+        boolean r = false;
+        r |= left.touchDragged(screenX, screenY, pointer);
+        r |= right.touchDragged(screenX, screenY, pointer);
+        return r;
     }
 
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-        boosting = false;
-        ship.propLeft.setBosting(false);
-        ship.propRight.setBosting(false);
-        return true;
-    }
-
-    /**
-     * Translates diff and maxDiffSize in rotation percent. Uses deadZone.
-     * <br>
-     * note: 0 <= percent <= 1
-     */
-    private float calcRotationPercent(float distance) {
-        float percent = distance / maxDiffSize;
-        if (percent <= deadZone) {
-            return 0;
-        }
-        if (percent >= 1) {
-            return 1;
-        }
-        return percent;
-    }
-
-    private Vector3 calcRelativeDir(float rotationPercent, Vector2 dir) {
-        if (rotationPercent == 0) {
-            return Vector3.Z;
-        }
-        return Vector3.Z.cpy()
-                .rotateRad(Vector3.Y, rotationPercent * MathUtils.PI / 2)
-                .rotateRad(Vector3.Z, dir.angleRad());
+        boolean r = false;
+        r |= left.touchUp(screenX, screenY, pointer, button);
+        r |= right.touchUp(screenX, screenY, pointer, button);
+        return r;
     }
 }

@@ -55,7 +55,7 @@ public class SpaceRaceGame extends ApplicationAdapter {
 		bg.camera = cam;
 
 		inputProcessor = new ShipInputProcessor();
-		inputProcessor.ship = shipPlayer;
+		inputProcessor.setShip(shipPlayer);
 		Gdx.input.setInputProcessor(inputProcessor);
 
 		assets = new AssetManager();
