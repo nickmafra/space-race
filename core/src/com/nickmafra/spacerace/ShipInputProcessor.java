@@ -8,12 +8,7 @@ import com.badlogic.gdx.math.Vector3;
 
 public class ShipInputProcessor extends InputAdapter {
 
-    private static final Vector3 minusZ = Vector3.Z.cpy().scl(-1);
-
     public Ship ship;
-
-    public float linearAcceleration = 1f;
-    public float angularAcceleration = 10f;
 
     public float maxDiffSize = 50;
     public float deadZone = 0.1f;
@@ -22,16 +17,15 @@ public class ShipInputProcessor extends InputAdapter {
     private Vector2 initialPosition = new Vector2();
     private Vector2 currentPosition = new Vector2();
 
-    private final Vector3 tempV = new Vector3();
     private final Quaternion tempQ = new Quaternion();
 
     @Override
     public boolean touchDown(int screenX, int screenY, int pointer, int button) {
         boosting = true;
+        ship.propLeft.setBosting(true);
+        ship.propRight.setBosting(true);
         initialPosition.set(screenX, screenY);
         currentPosition.set(initialPosition);
-        ship.propLeft.propellantEmitter.start();
-        ship.propRight.propellantEmitter.start();
         return true;
     }
 
@@ -40,6 +34,14 @@ public class ShipInputProcessor extends InputAdapter {
         if (boosting) {
 
             currentPosition.set(screenX, screenY);
+
+            Vector2 diff = currentPosition.cpy().sub(initialPosition);
+            float rotationPercent = calcRotationPercent(diff.len());
+            Vector2 dir = new Vector2(diff.x, -diff.y).nor();
+            Vector3 relativeDir = calcRelativeDir(rotationPercent, dir);
+            Quaternion rotation = tempQ.setFromCross(Vector3.Z, relativeDir);
+            ship.propLeft.setRotation(rotation);
+            ship.propRight.setRotation(rotation);
 
             return true;
         } else {
@@ -50,31 +52,9 @@ public class ShipInputProcessor extends InputAdapter {
     @Override
     public boolean touchUp(int screenX, int screenY, int pointer, int button) {
         boosting = false;
-        ship.propLeft.propellantEmitter.end();
-        ship.propRight.propellantEmitter.end();
+        ship.propLeft.setBosting(false);
+        ship.propRight.setBosting(false);
         return true;
-    }
-
-    public void update(float deltaTime) {
-        if (boosting) {
-            Vector2 diff = currentPosition.cpy().sub(initialPosition);
-            float rotationPercent = calcRotationPercent(diff.len());
-            Vector2 dir = new Vector2(diff.x, -diff.y).nor();
-            Vector3 relativeDir = calcRelativeDir(rotationPercent, dir);
-            Quaternion rotation = tempQ.setFromCross(Vector3.Z, relativeDir);
-            ship.propLeft.setRotation(rotation);
-            ship.propRight.setRotation(rotation);
-
-            Vector3 shipDir = minusZ.cpy().rot(ship.physicalBody.worldTransform).nor();
-            float velocityDelta = linearAcceleration * deltaTime;
-            ship.physicalBody.linearVelocity.add(shipDir.scl(velocityDelta));
-
-            if (rotationPercent > 0) {
-                float angularVelocityDelta = rotationPercent * angularAcceleration * deltaTime;
-                Vector3 rotAxis3d = tempV.set(relativeDir).crs(Vector3.Z).rot(ship.physicalBody.worldTransform).nor();
-                ship.physicalBody.angularVelocity.rotate(rotAxis3d, angularVelocityDelta);
-            }
-        }
     }
 
     /**

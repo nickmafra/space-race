@@ -25,11 +25,11 @@ public class Ship {
         modelObjectBody.setParent(physicalBody);
 
         propLeft.modelObjectBody.setParent(modelObjectBody);
-        propLeft.relativeTransform.translate(-0.5f, -0.05f, 0);
+        propLeft.setRelativeTransform(-0.5f, -0.05f, 0);
         propLeft.load(assets);
 
         propRight.modelObjectBody.setParent(modelObjectBody);
-        propRight.relativeTransform.translate(0.5f, -0.05f, 0);
+        propRight.setRelativeTransform(0.5f, -0.05f, 0);
         propRight.load(assets);
 
         modelObjectBody.updateInstancesList();
